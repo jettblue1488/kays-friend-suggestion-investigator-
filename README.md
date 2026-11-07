@@ -52,3 +52,9 @@ For contacts, it reads **display names only** after explicit permission. The Acc
 - Snapchat: https://help.snapchat.com/hc/en-us/articles/35382503314580-What-is-Find-Friends
 - Android Accessibility: https://developer.android.com/reference/android/accessibilityservice/AccessibilityService
 - Google Play Accessibility Policy: https://support.google.com/googleplay/android-developer/answer/10964491
+
+## Easy setup (v0.3.0)
+
+The first launch opens an interactive setup wizard when the Accessibility service is off. Tap **Understand and open Accessibility**, choose **Installed/Downloaded apps → Kay's visible-suggestion scanner**, and turn it on manually. If Android says **Restricted setting**, first try enabling the scanner to display that warning, then use the wizard's **Open Kay's app info** button. In App Info, choose **⋮ → Allow restricted settings**, then return to Accessibility to turn the scanner on. Android will not allow the app to grant its own Accessibility permission; contact-name matching is optional. The setup wizard checks permission status automatically when you return and resumes your pending platform selection.
+
+**Note on installations:** v0.3.0 uses a separate application ID due to GitHub Actions development APK signing; the v0.2.0 debug-signed APK cannot be reliably updated without its original signing key. Versions 0.1/0.2 may remain installed until you uninstall them. Future production updates should use a persistent private signing key stored securely outside the public repository.

@@ -33,7 +33,7 @@ jobs:
       - name: Upload installable APK
         uses: actions/upload-artifact@v4
         with:
-          name: Kays-Friend-Inspector-v2-APK
+          name: Kays-Friend-Inspector-Easy-Setup-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30
@@ -43,11 +43,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          cp app/build/outputs/apk/debug/app-debug.apk Kays-Friend-Inspector-v2-Install.apk
-          if gh release view v0.2.0 >/dev/null 2>&1; then
-            gh release upload v0.2.0 Kays-Friend-Inspector-v2-Install.apk --clobber
+          cp app/build/outputs/apk/debug/app-debug.apk Kays-Friend-Inspector-Easy-Setup-v3.apk
+          if gh release view v0.3.0 >/dev/null 2>&1; then
+            gh release upload v0.3.0 Kays-Friend-Inspector-Easy-Setup-v3.apk --clobber
           else
-            gh release create v0.2.0 Kays-Friend-Inspector-v2-Install.apk \
-              --title "Kay's Friend Suggestion Inspector v0.2.0 (beta)" \
-              --notes "Free Android APK built from this repository. This is a beta: scans visible friend suggestions in TikTok, Snapchat, and Facebook after explicit Accessibility permission. It cannot know the platforms' hidden recommendation reasons or determine historical physical proximity. Contact display-name and possible cross-platform matches are unverified hints. This release has a new Android application ID to prevent conflicts with previously installed copies. Not yet tested on a physical Android device."
+            gh release create v0.3.0 Kays-Friend-Inspector-Easy-Setup-v3.apk \
+              --title "Kay's Friend Suggestion Inspector v0.3.0 (beta)" \
+              --notes "Free Android APK built from this repository. This is a beta: scans visible friend suggestions in TikTok, Snapchat, and Facebook after explicit Accessibility permission. It cannot know the platforms' hidden recommendation reasons or determine historical physical proximity. Contact display-name and possible cross-platform matches are unverified hints. Easy on-device permission setup with links to Accessibility and App Info, instructions for Android Restricted settings, and a separate Android application ID to avoid old debug-signing conflicts. Not yet tested on a physical Android device."
           fi

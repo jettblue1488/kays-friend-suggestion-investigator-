@@ -5,6 +5,7 @@ import android.accessibilityservice.AccessibilityServiceInfo;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.net.Uri;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -39,16 +40,32 @@ public class MainActivity extends Activity {
     private LinearLayout root;
     private String filter = "All";
     private boolean resultsOpen = false;
+    private boolean setupOpen = false;
+    private int pendingPlatform = -1;
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         getWindow().setStatusBarColor(BG);
         getWindow().setNavigationBarColor(BG);
-        home();
+        if (accessibilityEnabled()) home(); else showSetup();
     }
     @Override protected void onResume() {
         super.onResume();
-        if (root != null) { if (resultsOpen) results(); else home(); }
+        if (root == null) return;
+        if (setupOpen) {
+            if (accessibilityEnabled()) {
+                int selected = pendingPlatform;
+                pendingPlatform = -1;
+                setupOpen = false;
+                if (selected >= 0) startScan(selected); else home();
+            } else {
+                showSetup();
+            }
+        } else if (resultsOpen) {
+            results();
+        } else {
+            home();
+        }
     }
     @Override public void onBackPressed() {
         if (resultsOpen) { resultsOpen = false; home(); }
@@ -119,6 +136,7 @@ public class MainActivity extends Activity {
         gap(20);
     }
     private void home() {
+        setupOpen = false;
         resultsOpen = false;
         screen("Friend Suggestion Inspector",
             "Choose a social app already signed in on your phone. Observe only friend suggestions visible on its screen.");
@@ -130,6 +148,8 @@ public class MainActivity extends Activity {
             ? "Selected app only. Your scan automatically ends after 15 minutes."
             : "No screen information is being recorded until you start a session.",
             13,MUTED,false);
+        button(accessibilityEnabled() ? "Scanner setup: Enabled ✓ (review settings)"
+            : "Scanner setup: Needs your permission",CARD,this::showSetup);
         for (int i=0;i<PLATFORMS.length;i++) {
             final int selected = i;
             button("Scan " + PLATFORMS[i] + " suggestions",BLUE,()->startScan(selected));
@@ -145,6 +165,103 @@ public class MainActivity extends Activity {
         label(warning,"What can this app really identify?",18,WHITE,true);
         label(warning,"Possible matching contact display names and similar names on other apps. It cannot access the platform's hidden recommendation logic, identify why an individual was suggested, or reconstruct when two people were physically nearby.",13,MUTED,false);
         button("Delete all saved observations",Color.rgb(102,51,65),this::confirmDelete);
+    }
+    /** Setup can only guide the user; Android never lets us switch Accessibility on. */
+    private void showSetup() {
+        setupOpen = true;
+        resultsOpen = false;
+        boolean enabled = accessibilityEnabled();
+        screen("Easy scanner setup",
+            "Two Android screens, with buttons to open them. You control the permission.");
+        LinearLayout status = card();
+        label(status, enabled ? "✓ Screen scanner enabled"
+            : "1 of 2 · Screen scanner not enabled", 18, enabled ? MINT : WHITE, true);
+        label(status, enabled
+            ? "You're ready to choose TikTok, Snapchat, or Facebook. Contact access is optional."
+            : "Android blocks apps from switching on Accessibility automatically. We can take you to the correct Settings screen.",
+            14, MUTED, false);
+
+        if (!enabled) {
+            LinearLayout first = card();
+            label(first,"Step 1 — Find and enable the scanner",17,WHITE,true);
+            label(first,
+                "Tap the button below. In Accessibility, open Installed apps / Downloaded apps. " +
+                "Select 'Kay's visible-suggestion scanner' and turn it ON. " +
+                "Android will ask you to confirm.", 14, MUTED, false);
+            button(ScanSession.consented(this)
+                ? "Open Accessibility settings" : "Understand and open Accessibility",
+                BLUE, () -> {
+                    if (ScanSession.consented(this)) openAccessibility();
+                    else consentForSetup();
+                });
+            LinearLayout blocked = card();
+            label(blocked,"Step 2 — Only if Android says Restricted setting",17,WHITE,true);
+            label(blocked,"Some phones block Accessibility for APK-installed apps. " +
+                "First try the scanner above. If Android says 'Restricted setting', " +
+                "tap 'Open Kay's app info' below, then tap the ⋮ menu at the top right " +
+                "and choose 'Allow restricted settings'. Confirm with your phone unlock. " +
+                "Return here and open Accessibility again.",14,MUTED,false);
+            button("Open Kay's app info (if restricted)",CARD,this::openAppInfo);
+        } else {
+            button("Continue to platform selection",MINT,()->{
+                pendingPlatform=-1;
+                setupOpen=false;
+                home();
+            });
+        }
+        button("Check permission again",MINT,()->{
+            if (accessibilityEnabled()) {
+                int selected = pendingPlatform;
+                pendingPlatform=-1;
+                setupOpen=false;
+                if (selected>=0) startScan(selected); else home();
+            } else showSetup();
+        });
+        button("View app without scanning",CARD,()->{
+            pendingPlatform=-1;
+            setupOpen=false;
+            home();
+        });
+        LinearLayout notice=card();
+        label(notice,"Your privacy",16,WHITE,true);
+        label(notice,"Accessibility can expose sensitive information on your screen. " +
+            "This scanner only processes visible suggestions in the social app you select, " +
+            "during a 15-minute scan that you start. It does not obtain hidden reasons " +
+            "or past locations. You can revoke access from Android Settings anytime.",13,MUTED,false);
+    }
+    private void consentForSetup() {
+        new AlertDialog.Builder(this)
+            .setTitle("Before you enable screen access")
+            .setMessage("Android Accessibility gives an app broad ability to read screen information. " +
+                "Kay's Inspector only processes visible suggestion lists from the TikTok, Snapchat, " +
+                "or Facebook app you select, for up to 15 minutes per scan. This permission is optional " +
+                "until you want to scan, and you may revoke it at any time. " +
+                "The app doesn't request Internet access. Do you want to open Android settings?")
+            .setNegativeButton("Not now",null)
+            .setPositiveButton("I understand — open settings",(d,w)->{
+                ScanSession.consent(this);
+                openAccessibility();
+            }).show();
+    }
+    private void openAccessibility() {
+        try {
+            startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
+        } catch (Exception e) {
+            new AlertDialog.Builder(this).setTitle("Could not open settings")
+                .setMessage("Open phone Settings, then Accessibility, then Installed apps.")
+                .setPositiveButton("OK",null).show();
+        }
+    }
+    private void openAppInfo() {
+        try {
+            startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                Uri.parse("package:" + getPackageName())));
+        } catch (Exception e) {
+            new AlertDialog.Builder(this).setTitle("Could not open app information")
+                .setMessage("Open phone Settings → Apps → Kay's Inspector 3. " +
+                    "If Android showed Restricted setting, use ⋮ → Allow restricted settings.")
+                .setPositiveButton("OK",null).show();
+        }
     }
     private void showDisclosure(int index) {
         new AlertDialog.Builder(this)
@@ -170,12 +287,8 @@ public class MainActivity extends Activity {
     private void startScan(int index) {
         if (!ScanSession.consented(this)) { showDisclosure(index);return; }
         if (!accessibilityEnabled()) {
-            new AlertDialog.Builder(this).setTitle("Enable the scanner")
-                .setMessage("Turn on 'Kay's visible-suggestion scanner' in Android Accessibility settings, then return here and tap Scan again. This grants broad system Accessibility permission, but the scanner's code processes only the selected app while a timed scan is active.")
-                .setNegativeButton("Cancel",null)
-                .setPositiveButton("Open settings",(d,w)->
-                    startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)))
-                .show();
+            pendingPlatform=index;
+            showSetup();
             return;
         }
         String pkg=PACKAGES[index];

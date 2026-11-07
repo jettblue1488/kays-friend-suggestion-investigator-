@@ -5,11 +5,11 @@ android {
     namespace 'com.kays.friendsuggestions'
     compileSdk 35
     defaultConfig {
-        applicationId 'com.kays.friendsuggestions.installfix2026'
+        applicationId 'com.kays.friendsuggestions.easysetup2026'
         minSdk 26
         targetSdk 34
-        versionCode 2
-        versionName '0.2'
+        versionCode 3
+        versionName '0.3'
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
