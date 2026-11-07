@@ -8,7 +8,7 @@
         <package android:name="com.facebook.katana" />
     </queries>
     <application android:allowBackup="false" android:usesCleartextTraffic="false"
-        android:label="Kay's Suggestion Inspector"
+        android:label="Kay's Inspector 2"
         android:theme="@android:style/Theme.Material.NoActionBar"
         android:description="@string/app_description">
         <activity android:name=".MainActivity" android:exported="true">
