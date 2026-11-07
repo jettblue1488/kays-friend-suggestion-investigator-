@@ -92,7 +92,7 @@ public class MainActivity extends Activity {
         Button b = new Button(this);
         b.setText(text);
         b.setTextSize(15);
-        b.setTextAllCaps(false);
+        b.setAllCaps(false);
         b.setTextColor(color == MINT ? BG : WHITE);
         b.setBackground(shape(color));
         b.setOnClickListener(v -> action.run());
