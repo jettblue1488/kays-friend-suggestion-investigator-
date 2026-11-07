@@ -11,13 +11,13 @@
         android:label="Kay's Inspector 2"
         android:theme="@android:style/Theme.Material.NoActionBar"
         android:description="@string/app_description">
-        <activity android:name=".MainActivity" android:exported="true">
+        <activity android:name="com.kays.friendsuggestions.MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".SuggestionAccessibilityService"
+        <service android:name="com.kays.friendsuggestions.SuggestionAccessibilityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:exported="true" android:label="Kay's visible-suggestion scanner">
             <intent-filter>
